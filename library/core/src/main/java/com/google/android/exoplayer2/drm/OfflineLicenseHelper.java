@@ -43,11 +43,11 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
    * is no longer required.
    *
    * @param defaultLicenseUrl The default license URL. Used for key requests that do not specify
-   *     their own license URL.
+   * their own license URL.
    * @param httpDataSourceFactory A factory from which to obtain {@link HttpDataSource} instances.
    * @return A new instance which uses Widevine CDM.
    * @throws UnsupportedDrmException If the Widevine DRM scheme is unsupported or cannot be
-   *     instantiated.
+   * instantiated.
    */
   public static OfflineLicenseHelper<FrameworkMediaCrypto> newWidevineInstance(
       String defaultLicenseUrl, Factory httpDataSourceFactory)
@@ -60,13 +60,13 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
    * is no longer required.
    *
    * @param defaultLicenseUrl The default license URL. Used for key requests that do not specify
-   *     their own license URL.
+   * their own license URL.
    * @param forceDefaultLicenseUrl Whether to use {@code defaultLicenseUrl} for key requests that
-   *     include their own license URL.
+   * include their own license URL.
    * @param httpDataSourceFactory A factory from which to obtain {@link HttpDataSource} instances.
    * @return A new instance which uses Widevine CDM.
    * @throws UnsupportedDrmException If the Widevine DRM scheme is unsupported or cannot be
-   *     instantiated.
+   * instantiated.
    */
   public static OfflineLicenseHelper<FrameworkMediaCrypto> newWidevineInstance(
       String defaultLicenseUrl, boolean forceDefaultLicenseUrl, Factory httpDataSourceFactory)
@@ -80,16 +80,16 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
    * is no longer required.
    *
    * @param defaultLicenseUrl The default license URL. Used for key requests that do not specify
-   *     their own license URL.
+   * their own license URL.
    * @param forceDefaultLicenseUrl Whether to use {@code defaultLicenseUrl} for key requests that
-   *     include their own license URL.
+   * include their own license URL.
    * @param optionalKeyRequestParameters An optional map of parameters to pass as the last argument
-   *     to {@link MediaDrm#getKeyRequest(byte[], byte[], String, int, HashMap)}. May be null.
+   * to {@link MediaDrm#getKeyRequest(byte[], byte[], String, int, HashMap)}. May be null.
    * @return A new instance which uses Widevine CDM.
    * @throws UnsupportedDrmException If the Widevine DRM scheme is unsupported or cannot be
-   *     instantiated.
+   * instantiated.
    * @see DefaultDrmSessionManager#DefaultDrmSessionManager(java.util.UUID, ExoMediaDrm,
-   *     MediaDrmCallback, HashMap, Handler, DefaultDrmSessionEventListener)
+   * MediaDrmCallback, HashMap, Handler, DefaultDrmSessionEventListener)
    */
   public static OfflineLicenseHelper<FrameworkMediaCrypto> newWidevineInstance(
       String defaultLicenseUrl,
@@ -97,11 +97,21 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
       Factory httpDataSourceFactory,
       HashMap<String, String> optionalKeyRequestParameters)
       throws UnsupportedDrmException {
+    return newWidevineInstance(optionalKeyRequestParameters,
+        new HttpMediaDrmCallback(defaultLicenseUrl, forceDefaultLicenseUrl,
+            httpDataSourceFactory));
+  }
+
+  public static OfflineLicenseHelper<FrameworkMediaCrypto> newWidevineInstance(
+      HashMap<String, String> optionalKeyRequestParameters,
+      HttpMediaDrmCallback callback)
+      throws UnsupportedDrmException {
     return new OfflineLicenseHelper<>(C.WIDEVINE_UUID,
         FrameworkMediaDrm.newInstance(C.WIDEVINE_UUID),
-        new HttpMediaDrmCallback(defaultLicenseUrl, forceDefaultLicenseUrl, httpDataSourceFactory),
+        callback,
         optionalKeyRequestParameters);
   }
+
 
   /**
    * Constructs an instance. Call {@link #release()} when the instance is no longer required.
@@ -110,9 +120,9 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
    * @param mediaDrm An underlying {@link ExoMediaDrm} for use by the manager.
    * @param callback Performs key and provisioning requests.
    * @param optionalKeyRequestParameters An optional map of parameters to pass as the last argument
-   *     to {@link MediaDrm#getKeyRequest(byte[], byte[], String, int, HashMap)}. May be null.
+   * to {@link MediaDrm#getKeyRequest(byte[], byte[], String, int, HashMap)}. May be null.
    * @see DefaultDrmSessionManager#DefaultDrmSessionManager(java.util.UUID, ExoMediaDrm,
-   *     MediaDrmCallback, HashMap, Handler, DefaultDrmSessionEventListener)
+   * MediaDrmCallback, HashMap, Handler, DefaultDrmSessionEventListener)
    */
   public OfflineLicenseHelper(
       UUID uuid,

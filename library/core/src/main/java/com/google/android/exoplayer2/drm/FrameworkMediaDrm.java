@@ -252,15 +252,17 @@ public final class FrameworkMediaDrm implements ExoMediaDrm<FrameworkMediaCrypto
 
     // For API levels 23 - 27, prefer the first V1 PSSH box. For API levels 22 and earlier, prefer
     // the first V0 box.
-    for (int i = 0; i < schemeDatas.size(); i++) {
-      SchemeData schemeData = schemeDatas.get(i);
-      int version = PsshAtomUtil.parseVersion(schemeData.data);
-      if (Util.SDK_INT < 23 && version == 0) {
-        return schemeData;
-      } else if (Util.SDK_INT >= 23 && version == 1) {
-        return schemeData;
-      }
-    }
+    /**
+     schemeData.dataの中身がうまくパースできないため、コメントアウト（SDKのバージョンに拘らずversionが０で取れてしまう）
+     for (int i = 0; i < schemeDatas.size(); i++) {
+     SchemeData schemeData = schemeDatas.get(i);
+     int version = PsshAtomUtil.parseVersion(schemeData.data);
+     if (Util.SDK_INT < 23 && version == 0) {
+     return schemeData;
+     } else if (Util.SDK_INT >= 23 && version == 1) {
+     return schemeData;
+     }
+     }**/
 
     // If all else fails, use the first scheme data.
     return schemeDatas.get(0);
@@ -276,10 +278,10 @@ public final class FrameworkMediaDrm implements ExoMediaDrm<FrameworkMediaCrypto
     // devices also required data to be extracted from the PSSH atom for PlayReady.
     if ((Util.SDK_INT < 21 && C.WIDEVINE_UUID.equals(uuid))
         || (C.PLAYREADY_UUID.equals(uuid)
-            && "Amazon".equals(Util.MANUFACTURER)
-            && ("AFTB".equals(Util.MODEL) // Fire TV Gen 1
-                || "AFTS".equals(Util.MODEL) // Fire TV Gen 2
-                || "AFTM".equals(Util.MODEL)))) { // Fire TV Stick Gen 1
+        && "Amazon".equals(Util.MANUFACTURER)
+        && ("AFTB".equals(Util.MODEL) // Fire TV Gen 1
+        || "AFTS".equals(Util.MODEL) // Fire TV Gen 2
+        || "AFTM".equals(Util.MODEL)))) { // Fire TV Stick Gen 1
       byte[] psshData = PsshAtomUtil.parseSchemeSpecificData(initData, uuid);
       if (psshData != null) {
         // Extraction succeeded, so return the extracted data.

@@ -18,6 +18,7 @@ package com.google.android.exoplayer2.source.hls.playlist;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Base64;
+import android.util.Log;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.ParserException;
@@ -74,6 +75,8 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
   private static final String TAG_KEY = "#EXT-X-KEY";
   private static final String TAG_BYTERANGE = "#EXT-X-BYTERANGE";
   private static final String TAG_GAP = "#EXT-X-GAP";
+  private static final String TAG_SESSION_KEY = "#EXT-X-SESSION-KEY";
+
 
   private static final String TYPE_AUDIO = "AUDIO";
   private static final String TYPE_VIDEO = "VIDEO";
@@ -256,10 +259,14 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     boolean noClosedCaptions = false;
     boolean hasIndependentSegmentsTag = false;
 
+    TreeMap<String, SchemeData> currentSchemeDatas = new TreeMap<>();
+    DrmInitData cachedDrmInitData = null;
+    String encryptionScheme = null;
+    DrmInitData playlistProtectionSchemes = null;
+
     String line;
     while (iterator.hasNext()) {
       line = iterator.next();
-
       if (line.startsWith(TAG_PREFIX)) {
         // We expose all tags through the playlist.
         tags.add(line);
@@ -330,6 +337,38 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                   /* initializationData= */ null,
                   /* selectionFlags= */ 0);
           variants.add(new HlsMasterPlaylist.HlsUrl(line, format));
+        }
+      } else if (line.startsWith(TAG_SESSION_KEY)) {
+        String method = parseStringAttr(line, REGEX_METHOD, variableDefinitions);
+        String keyFormat =
+            parseOptionalStringAttr(line, REGEX_KEYFORMAT, KEYFORMAT_IDENTITY, variableDefinitions);
+        if (METHOD_NONE.equals(method)) {
+          currentSchemeDatas.clear();
+          cachedDrmInitData = null;
+        } else /* !METHOD_NONE.equals(method) */ {
+          if (encryptionScheme == null) {
+            encryptionScheme =
+                METHOD_SAMPLE_AES_CENC.equals(method) || METHOD_SAMPLE_AES_CTR.equals(method)
+                    ? C.CENC_TYPE_cenc
+                    : C.CENC_TYPE_cbcs;
+          }
+          SchemeData schemeData;
+          if (KEYFORMAT_PLAYREADY.equals(keyFormat)) {
+            schemeData = parsePlayReadySchemeData(line, variableDefinitions);
+          } else {
+            schemeData = parseWidevineSchemeData(line, keyFormat, variableDefinitions);
+          }
+          if (schemeData != null) {
+            cachedDrmInitData = null;
+            currentSchemeDatas.put(keyFormat, schemeData);
+          }
+          if (cachedDrmInitData == null && !currentSchemeDatas.isEmpty()) {
+            SchemeData[] schemeDatas = currentSchemeDatas.values().toArray(new SchemeData[0]);
+            cachedDrmInitData = new DrmInitData(encryptionScheme, schemeDatas);
+            if (playlistProtectionSchemes == null) {
+              playlistProtectionSchemes = new DrmInitData(encryptionScheme, schemeDatas);
+            }
+          }
         }
       }
     }
@@ -423,7 +462,8 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         muxedAudioFormat,
         muxedCaptionFormats,
         hasIndependentSegmentsTag,
-        variableDefinitions);
+        variableDefinitions,
+        playlistProtectionSchemes);
   }
 
   @C.SelectionFlags
@@ -477,7 +517,6 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     String line;
     while (iterator.hasNext()) {
       line = iterator.next();
-
       if (line.startsWith(TAG_PREFIX)) {
         // We expose all tags through the playlist.
         tags.add(line);
@@ -661,7 +700,8 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         segments);
   }
 
-  private static @Nullable SchemeData parsePlayReadySchemeData(
+  private static @Nullable
+  SchemeData parsePlayReadySchemeData(
       String line, Map<String, String> variableDefinitions) throws ParserException {
     String keyFormatVersions =
         parseOptionalStringAttr(line, REGEX_KEYFORMATVERSIONS, "1", variableDefinitions);
@@ -675,10 +715,12 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     return new SchemeData(C.PLAYREADY_UUID, MimeTypes.VIDEO_MP4, psshData);
   }
 
-  private static @Nullable SchemeData parseWidevineSchemeData(
+  private static @Nullable
+  SchemeData parseWidevineSchemeData(
       String line, String keyFormat, Map<String, String> variableDefinitions)
       throws ParserException {
     if (KEYFORMAT_WIDEVINE_PSSH_BINARY.equals(keyFormat)) {
+      //if (keyFormat.equals(keyFormat)) {
       String uriString = parseStringAttr(line, REGEX_URI, variableDefinitions);
       return new SchemeData(
           C.WIDEVINE_UUID,
@@ -718,7 +760,8 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     }
   }
 
-  private static @Nullable String parseOptionalStringAttr(
+  private static @Nullable
+  String parseOptionalStringAttr(
       String line, Pattern pattern, Map<String, String> variableDefinitions) {
     return parseOptionalStringAttr(line, pattern, null, variableDefinitions);
   }
