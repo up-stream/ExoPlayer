@@ -517,7 +517,7 @@ public class DefaultDrmSessionManager<T extends ExoMediaCrypto> implements DrmSe
 
     List<SchemeData> schemeDatas = null;
     if (offlineLicenseKeySetId == null) {
-      schemeDatas = getSchemeDatas(drmInitData, uuid, false);
+      schemeDatas = getSchemeDatas(drmInitData, uuid, true);
       if (schemeDatas.isEmpty()) {
         final MissingSchemeDataException error = new MissingSchemeDataException(uuid);
         eventDispatcher.dispatch(listener -> listener.onDrmSessionManagerError(error));

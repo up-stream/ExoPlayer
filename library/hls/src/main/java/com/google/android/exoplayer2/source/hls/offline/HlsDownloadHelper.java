@@ -19,6 +19,7 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.drm.DrmInitData;
 import com.google.android.exoplayer2.offline.DownloadHelper;
 import com.google.android.exoplayer2.offline.StreamKey;
 import com.google.android.exoplayer2.offline.TrackKey;
@@ -78,6 +79,7 @@ public final class HlsDownloadHelper extends DownloadHelper {
     }
     // TODO: Generate track groups as in playback. Reverse the mapping in getDownloadAction.
     HlsMasterPlaylist masterPlaylist = (HlsMasterPlaylist) playlist;
+
     TrackGroup[] trackGroups = new TrackGroup[3];
     renditionGroups = new int[3];
     int trackGroupIndex = 0;
@@ -94,6 +96,11 @@ public final class HlsDownloadHelper extends DownloadHelper {
       trackGroups[trackGroupIndex++] = new TrackGroup(toFormats(masterPlaylist.subtitles));
     }
     return new TrackGroupArray(Arrays.copyOf(trackGroups, trackGroupIndex));
+  }
+
+  public DrmInitData getDrmInitData(){
+    HlsMasterPlaylist masterPlaylist = (HlsMasterPlaylist) playlist;
+    return masterPlaylist.playlistProtectionSchemes;
   }
 
   @Override

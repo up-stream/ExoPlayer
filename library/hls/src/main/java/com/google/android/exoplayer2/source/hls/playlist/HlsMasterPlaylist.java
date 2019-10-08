@@ -16,6 +16,7 @@
 package com.google.android.exoplayer2.source.hls.playlist;
 
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.drm.DrmInitData;
 import com.google.android.exoplayer2.offline.StreamKey;
 import com.google.android.exoplayer2.util.MimeTypes;
 import java.util.ArrayList;
@@ -37,7 +38,8 @@ public final class HlsMasterPlaylist extends HlsPlaylist {
           /* muxedAudioFormat= */ null,
           /* muxedCaptionFormats= */ Collections.emptyList(),
           /* hasIndependentSegments= */ false,
-          /* variableDefinitions= */ Collections.emptyMap());
+          /* variableDefinitions= */ Collections.emptyMap(),
+          /* playlistProtectionSchemes= */null);
 
   public static final int GROUP_INDEX_VARIANT = 0;
   public static final int GROUP_INDEX_AUDIO = 1;
@@ -115,6 +117,8 @@ public final class HlsMasterPlaylist extends HlsPlaylist {
   /** Contains variable definitions, as defined by the #EXT-X-DEFINE tag. */
   public final Map<String, String> variableDefinitions;
 
+  public final DrmInitData playlistProtectionSchemes;
+
   /**
    * @param baseUri See {@link #baseUri}.
    * @param tags See {@link #tags}.
@@ -135,7 +139,8 @@ public final class HlsMasterPlaylist extends HlsPlaylist {
       Format muxedAudioFormat,
       List<Format> muxedCaptionFormats,
       boolean hasIndependentSegments,
-      Map<String, String> variableDefinitions) {
+      Map<String, String> variableDefinitions,
+      DrmInitData playlistProtectionSchemes) {
     super(baseUri, tags, hasIndependentSegments);
     this.variants = Collections.unmodifiableList(variants);
     this.audios = Collections.unmodifiableList(audios);
@@ -144,6 +149,7 @@ public final class HlsMasterPlaylist extends HlsPlaylist {
     this.muxedCaptionFormats = muxedCaptionFormats != null
         ? Collections.unmodifiableList(muxedCaptionFormats) : null;
     this.variableDefinitions = Collections.unmodifiableMap(variableDefinitions);
+    this.playlistProtectionSchemes = playlistProtectionSchemes;
   }
 
   @Override
@@ -157,7 +163,8 @@ public final class HlsMasterPlaylist extends HlsPlaylist {
         muxedAudioFormat,
         muxedCaptionFormats,
         hasIndependentSegments,
-        variableDefinitions);
+        variableDefinitions,
+        playlistProtectionSchemes);
   }
 
   /**
@@ -178,7 +185,8 @@ public final class HlsMasterPlaylist extends HlsPlaylist {
         /* muxedAudioFormat= */ null,
         /* muxedCaptionFormats= */ null,
         /* hasIndependentSegments= */ false,
-        /* variableDefinitions= */ Collections.emptyMap());
+        /* variableDefinitions= */ Collections.emptyMap(),
+        null);
   }
 
   private static List<HlsUrl> copyRenditionsList(
