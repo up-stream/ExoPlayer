@@ -138,25 +138,33 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
           @Override
           public void onDrmKeysLoaded() {
             conditionVariable.open();
-            listener_.onDrmKeysLoaded();
+            if(listener_ != null) {
+              listener_.onDrmKeysLoaded();
+            }
           }
 
           @Override
           public void onDrmSessionManagerError(Exception e) {
             conditionVariable.open();
-            listener_.onDrmSessionManagerError(e);
+            if(listener_ != null) {
+              listener_.onDrmSessionManagerError(e);
+            }
           }
 
           @Override
           public void onDrmKeysRestored() {
             conditionVariable.open();
-            listener_.onDrmKeysRestored();
+            if(listener_ != null) {
+              listener_.onDrmKeysRestored();
+            }
           }
 
           @Override
           public void onDrmKeysRemoved() {
             conditionVariable.open();
-            listener_.onDrmKeysRemoved();
+            if(listener_ != null) {
+              listener_.onDrmKeysRemoved();
+            }
           }
         };
     drmSessionManager =
