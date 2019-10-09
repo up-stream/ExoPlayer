@@ -37,6 +37,7 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
   private final ConditionVariable conditionVariable;
   private final DefaultDrmSessionManager<T> drmSessionManager;
   private final HandlerThread handlerThread;
+  private Listener listener_ = null;
 
   /**
    * Instantiates a new instance which uses Widevine CDM. Call {@link #release()} when the instance
@@ -137,21 +138,25 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
           @Override
           public void onDrmKeysLoaded() {
             conditionVariable.open();
+            listener_.onDrmKeysLoaded();
           }
 
           @Override
           public void onDrmSessionManagerError(Exception e) {
             conditionVariable.open();
+            listener_.onDrmSessionManagerError(e);
           }
 
           @Override
           public void onDrmKeysRestored() {
             conditionVariable.open();
+            listener_.onDrmKeysRestored();
           }
 
           @Override
           public void onDrmKeysRemoved() {
             conditionVariable.open();
+            listener_.onDrmKeysRemoved();
           }
         };
     drmSessionManager =
@@ -278,6 +283,26 @@ public final class OfflineLicenseHelper<T extends ExoMediaCrypto> {
     // Block current thread until key loading is finished
     conditionVariable.block();
     return drmSession;
+  }
+
+  public void addListener(Listener listener) {
+    listener_ = listener;
+
+  }
+
+  public void removeListener() {
+    listener_ = null;
+  }
+
+  public interface Listener {
+
+    void onDrmKeysLoaded();
+
+    void onDrmSessionManagerError(Exception e);
+
+    void onDrmKeysRestored();
+
+    void onDrmKeysRemoved();
   }
 
 }
